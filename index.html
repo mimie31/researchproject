@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulator Terbitan Kerosakan Silo Padi (SFM)</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <style>
+        /* Gaya slider kustom tema Light Mode Emerald */
+        input[type="range"] {
+            accent-color: #059669;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans min-h-screen">
+
+    <header class="bg-white border-b border-slate-200 py-6 px-6 mb-8 shadow-xs">
+        <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div>
+                <h1 class="text-2xl md:text-3xl font-black text-slate-900 tracking-tight">Simulator Terbitan Kerosakan Silo Padi</h1>
+                <p class="text-emerald-600 text-sm mt-1 font-medium">Analisis Kehilangan Kumulatif \(f(x)\) dan Kadar Pecutan Spoilage \(f'(x)\) Stok Padi Malaysia</p>
+            </div>
+            <div class="bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs px-3 py-2 rounded-md font-bold tracking-wide shadow-xs">
+                ● Program: Keterjaminan Makanan (SFM)
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 pb-16 grid grid-cols-1 lg:grid-cols-12 gap-8">
+        
+        <div class="lg:col-span-5 space-y-6">
+            
+            <div class="bg-white p-6 rounded-xl shadow-xs border border-slate-200">
+                <h2 class="text-lg font-bold text-slate-900 mb-3 flex items-center gap-2">
+                    📖 Senario Biosains Keterjaminan Makanan
+                </h2>
+                <div class="text-slate-600 text-sm space-y-3 leading-relaxed">
+                    <p>
+                        Dalam logistik pasca-tuai padi di Malaysia, kerosakan bijirin di dalam silo simpanan tidak berlaku secara linear, sebaliknya mengikut <strong class="text-emerald-600">Lengkung Logistik Sigmoid (S-shaped)</strong>. 
+                        Haba respirasi padi dan kelembapan tropika yang terperangkap mencipta "hot-spot" yang memitigasi pembiakan kulat serta kutu beras (weevils) secara mendadak.
+                    </p>
+                    <p>
+                        <strong>Terbitan Pertama \(f'(x)\)</strong> mewakili <strong class="text-cyan-600">kadar kelajuan kerosakan harian (%/hari)</strong>. 
+                        Dengan mengira puncak nilai terbitan ini, pengurus stok simpanan makanan negara dapat mengesan *inflection point* (titik genting) untuk mengaktifkan sistem pengudaraan udara (aeration) sebelum beras rosak sepenuhnya dan menjejaskan paras SSL (Self-Sufficiency Level) beras negara.
+                    </p>
+                </div>
+            </div>
+
+            <div class="bg-white p-6 rounded-xl shadow-xs border border-slate-200">
+                <h2 class="text-lg font-bold text-slate-900 mb-4">🧮 Model Matematik Logistik Kerosakan</h2>
+                
+                <div class="space-y-4 text-sm">
+                    <div>
+                        <span class="text-xs font-semibold uppercase text-slate-500 tracking-wider">Fungsi Kerugian Kumulatif \(f(x)\):</span>
+                        <div class="bg-slate-50 p-3 rounded-lg text-center my-2 text-emerald-700 border border-slate-200 font-mono overflow-x-auto text-base">
+                            $$f(x) = \frac{L_{max}}{1 + \beta \cdot e^{-k \cdot \eta \cdot x}}$$
+                        </div>
+                    </div>
+
+                    <div>
+                        <span class="text-xs font-semibold uppercase text-slate-500 tracking-wider">Terbitan Kadar Kerosakan Sehari \(f'(x)\):</span>
+                        <div class="bg-slate-50 p-3 rounded-lg text-center my-2 text-cyan-700 border border-slate-200 font-mono overflow-x-auto text-base">$$f'(x) = \frac{L_{max} \cdot \beta \cdot (k \cdot \eta) \cdot e^{-k \cdot \eta \cdot x}}{(1 + \beta \cdot e^{-k \cdot \eta \cdot x})^2}$$
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-2 text-xs text-slate-500 pt-3 border-t border-slate-100">
+                        <div>\(x\) = Tempoh Simpanan (0 - 30 Hari)</div>
+                        <div>\(L_{max}\) = Had Maksimum Kerosakan (%)</div>
+                        <div>\(\beta\) = Faktor Keadaan Awal Padi</div>
+                        <div>\(k\) = Pekali Pembiakan Mikrobiologi</div>
+                        <div class="col-span-2">\(\eta\) = Indeks Kelembapan & Pengudaraan Silo</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white p-6 rounded-xl shadow-xs border border-slate-200 space-y-5">
+                <h2 class="text-lg font-bold text-slate-900 flex items-center gap-2">
+                    🎛️ Parameter Silo & Persekitaran
+                </h2>
+
+                <div>
+                    <div class="flex justify-between text-xs font-bold uppercase tracking-wider mb-1">
+                        <span class="text-slate-600">Had Maksimum Kerosakan (\(L_{max}\))</span>
+                        <span class="text-emerald-600 font-bold text-sm" id="valLmax">20 %</span>
+                    </div>
+                    <input type="range" id="slideLmax" min="10" max="40" value="20" step="1" class="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer">
+                    <p class="text-[11px] text-slate-400 mt-0.5">Anggaran peratusan maksima stok yang terdedah kepada kerosakan mutlak.</p>
+                </div>
+
+                <div>
+                    <div class="flex justify-between text-xs font-bold uppercase tracking-wider mb-1">
+                        <span class="text-slate-600">Pekali Pembiakan Mikrobiologi (\(k\))</span>
+                        <span class="text-emerald-600 font-bold text-sm" id="valK">0.250</span>
+                    </div>
+                    <input type="range" id="slideK" min="0.10" max="0.50" value="0.25" step="0.01" class="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer">
+                    <p class="text-[11px] text-slate-400 mt-0.5">Kadar agresif kulat tropika membiak dalam timbunan bijirin padi.</p>
+                </div>
+
+                <div>
+                    <div class="flex justify-between text-xs font-bold uppercase tracking-wider mb-1">
+                        <span class="text-slate-600">Indeks Kelembapan Silo (\(\eta\))</span>
+                        <span class="text-emerald-600 font-bold text-sm" id="valEta">1.00</span>
+                    </div>
+                    <input type="range" id="slideEta" min="0.50" max="1.50" value="1.00" step="0.05" class="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer">
+                    <div class="flex justify-between text-[10px] text-slate-400 mt-0.5">
+                        <span>Kering / Pengudaraan Baik</span>
+                        <span>Lembap / Kurang Ventilasi</span>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="lg:col-span-7 space-y-6">
+            
+            <div class="bg-white p-6 rounded-xl shadow-xs border border-slate-200">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-sm font-bold text-slate-900 tracking-wide">📊 Graf Trajektori Kerosakan</h3>
+                    <div class="flex gap-4 text-xs font-semibold">
+                        <span class="flex items-center gap-1.5 text-emerald-600"><span class="w-3 h-1.5 bg-emerald-500 inline-block rounded-xs"></span> Jumlah Rosak f(x)</span>
+                        <span class="flex items-center gap-1.5 text-cyan-600"><span class="w-3 h-0.5 border-b-2 border-dashed border-cyan-500 inline-block"></span> Kadar f'(x)</span>
+                    </div>
+                </div><div class="relative w-full h-[320px]">
+                    <canvas id="spoilageChart"></canvas>
+                </div>
+
+                <div class="mt-6 pt-4 border-t border-slate-100">
+                    <div class="flex justify-between text-sm font-bold text-slate-700 mb-2">
+                        <span>Pilih Hari Simpanan (Garis Masa):</span>
+                        <span class="text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 text-xs font-bold" id="timelineDayLabel">Hari 15</span>
+                    </div>
+                    <input type="range" id="slideDay" min="0" max="30" value="15" step="1" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer">
+                </div>
+            </div>
+
+            <div class="bg-white p-6 rounded-xl shadow-xs border border-slate-200 border-l-4 border-emerald-500">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+                    <div>
+                        <div class="bg-slate-100 text-slate-700 text-[10px] font-bold uppercase tracking-widest px-2 py-1 rounded w-max mb-1">
+                            Calculus HUD Panel
+                        </div>
+                        <p class="text-xs text-slate-500">Metrik prestasi instantaneous derivative mengikut indeks hari yang dipilih.</p>
+                    </div>
+                    <div class="bg-slate-50 px-4 py-2 rounded-lg border border-slate-200 text-sm font-mono text-center text-slate-800" id="latexHud">
+                        \(f'(15) = 0.00\) %/hari
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                        <span class="text-xs text-slate-500 block font-bold uppercase tracking-wider mb-1">Jumlah Kerosakan \(f(x)\)</span>
+                        <span class="text-2xl font-black text-slate-900" id="hudTotal">0.00 %</span>
+                        <span class="text-[11px] text-slate-500 block mt-1" id="hudMass">(= 0 kg rosak)</span>
+                    </div>
+
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                        <span class="text-xs text-slate-500 block font-bold uppercase tracking-wider mb-1">Kadar Perubahan \(f'(x)\)</span>
+                        <span class="text-2xl font-black text-cyan-600" id="hudSpeed">0.00 %/hari</span>
+                        <span class="text-[11px] text-emerald-600 font-medium block mt-1" id="hudSpeedAlert">Status: Stabil</span>
+                    </div>
+
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                        <span class="text-xs text-slate-500 block font-bold uppercase tracking-wider mb-1">Status Keterjaminan Silo</span>
+                        <span class="text-sm font-bold text-amber-600 block mt-1.5" id="hudStatus">Penyelenggaraan Normal</span>
+                    </div>
+                </div>
+
+                <div class="mt-6 bg-slate-50 p-4 rounded-xl border border-slate-200">
+                    <div class="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-emerald-700 mb-2">
+                        <span class="w-2 h-2 rounded-full bg-cyan-500"></span> 
+                        🛡️ Impak Keselamatan Makanan (Bahasa Awam)
+                    </div>
+                    <p class="text-sm text-slate-600 italic leading-relaxed" id="laymanText">
+                        Memuat naik simulasi data...
+                    </p>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <footer class="text-center text-xs text-slate-400 py-8 border-t border-slate-200 max-w-7xl mx-auto">
+        Rangka Kerja Model Sekuriti Makanan Negara (SFM) | Dioptimumkan untuk Pelajar Universiti Malaysia
+    </footer>
+
+    <script>
+        // System Parameters & Constants
+        const beta = 50; // Faktor pemalar keadaan awal taburan bio-organismaconst totalSiloMassKg = 100000; // Kapasiti 100 Tan Metrik (Silo Kilang Padi BERNAS/MADA standard)
+        
+        // Hooks Parameter Kawalan
+        const slideLmax = document.getElementById('slideLmax');
+        const slideK = document.getElementById('slideK');
+        const slideEta = document.getElementById('slideEta');
+        const slideDay = document.getElementById('slideDay');
+
+        // Hooks Label Nilai
+        const valLmax = document.getElementById('valLmax');
+        const valK = document.getElementById('valK');
+        const valEta = document.getElementById('valEta');
+        const timelineDayLabel = document.getElementById('timelineDayLabel');
+
+        // Hooks Dashboard HUD
+        const hudTotal = document.getElementById('hudTotal');
+        const hudMass = document.getElementById('hudMass');
+        const hudSpeed = document.getElementById('hudSpeed');
+        const hudSpeedAlert = document.getElementById('hudSpeedAlert');
+        const hudStatus = document.getElementById('hudStatus');
+        const laymanText = document.getElementById('laymanText');
+        const latexHud = document.getElementById('latexHud');
+
+        // Formula Utama Matematik (Enjin Persamaan Logistik)
+        function getFx(x, Lmax, k, eta) {
+            return Lmax / (1 + beta * Math.exp(-k * eta * x));
+        }
+
+        function getFPrime(x, Lmax, k, eta) {
+            const numerator = Lmax * beta * (k * eta) * Math.exp(-k * eta * x);
+            const denominator = Math.pow(1 + beta * Math.exp(-k * eta * x), 2);
+            return numerator / denominator;
+        }
+
+        // Sediakan senarai array untuk paksi X (0 hingga 30 hari)
+        let labels = [];
+        let fxData = [];
+        let fPrimeData = [];
+
+        for (let i = 0; i <= 30; i++) {
+            labels.push(i);
+        }
+
+        // Konfigurasi Chart.js - Light Palette Style
+        const ctx = document.getElementById('spoilageChart').getContext('2d');
+        const spoilageChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: 'Kerosakan Kumulatif f(x) (%)',
+                        data: fxData,
+                        borderColor: '#059669', // Emerald 600
+                        backgroundColor: 'rgba(5, 150, 105, 0.05)',
+                        borderWidth: 3,
+                        tension: 0.2,
+                        yAxisID: 'y'
+                    },
+                    {
+                        label: "Kadar Kerosakan f'(x) (%/hari)",
+                        data: fPrimeData,
+                        borderColor: '#0891b2',
